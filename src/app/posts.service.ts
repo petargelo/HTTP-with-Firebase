@@ -1,7 +1,7 @@
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpEventType, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Subject, throwError } from "rxjs";
-import { map, catchError } from "rxjs/operators";
+import { map, catchError, tap } from "rxjs/operators";
 import { Post } from "./post.model";
 
 @Injectable({providedIn: 'root'})
@@ -14,7 +14,10 @@ createAndStorePosts (title: string, content: string){
     this.http
     .post<{name: string}>(
       'https://angularpg-ff730-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
-      postData
+      postData,
+      {
+        observe: 'response'
+      }
     )
     .subscribe(responseData => {
       console.log(responseData);
@@ -49,7 +52,18 @@ fetchPosts(){
 }
 
 clearPosts(){
-    return this.http.delete('https://angularpg-ff730-default-rtdb.europe-west1.firebasedatabase.app/posts.json');
+    return this.http.delete('https://angularpg-ff730-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+    {
+      observe: 'events'
+    }).pipe(tap(event=>{
+      
+      if (event.type === HttpEventType.Sent){
+        console.log('Poslano, čekaj...');
+      }
+      if (event.type === HttpEventType.Response){
+        console.log(event.body);
+      }
+    }));
 
        /*  const len=this.loadedPosts.length;
     this.loadedPosts.splice(0, len);
